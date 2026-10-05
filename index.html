@@ -2,561 +2,102 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>헤이리 오리·카피바라 여행</title>
 <style>
   :root{--ink:#4a3320;--paper:#fff8e8;--accent:#f2a93b;--leaf:#6fae5c}
-  *{box-sizing:border-box}
-  html,body{margin:0;height:100%;overflow:hidden;background:#9fd8f5;font-family:"Malgun Gothic","Apple SD Gothic Neo",system-ui,sans-serif;color:var(--ink);user-select:none}
-  canvas#c{position:fixed;inset:0;width:100%;height:100%;display:block}
-  .panel{background:rgba(255,248,232,.88);border:2px solid #e9d3a8;border-radius:16px;box-shadow:0 4px 14px rgba(80,50,10,.18)}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%;overflow:hidden;background:#9fd8f5;font-family:"Malgun Gothic","Apple SD Gothic Neo",system-ui,sans-serif;color:var(--ink);user-select:none;-webkit-user-select:none;touch-action:none}
+  canvas#c{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+  .panel{background:rgba(255,248,232,.9);border:2px solid #e9d3a8;border-radius:16px;box-shadow:0 4px 14px rgba(80,50,10,.18)}
   #hud{position:fixed;inset:0;pointer-events:none}
-  #stats{position:absolute;left:14px;top:14px;padding:10px 14px;font-weight:700;line-height:1.7}
+  #stats{position:absolute;left:12px;top:12px;padding:8px 12px;font-weight:700;line-height:1.6;font-size:14px}
   #stats small{font-weight:400;opacity:.7}
-  #ctrl{position:absolute;right:14px;top:14px;padding:8px;display:flex;gap:6px;pointer-events:auto}
-  #ctrl button{font:inherit;font-weight:700;color:var(--ink);background:#fff;border:2px solid #e9d3a8;border-radius:10px;padding:6px 10px;cursor:pointer}
+  #mission{position:absolute;left:12px;top:100px;padding:10px 14px;max-width:270px;font-size:14px;line-height:1.5}
+  #mission .t{font-weight:700;color:#c9731a}
+  #mission .s{margin-top:2px}
+  #mission .d{margin-top:4px;font-size:12px;opacity:.75}
+  #ctrl{position:absolute;right:12px;top:12px;padding:6px;display:flex;gap:5px;pointer-events:auto;flex-wrap:wrap;justify-content:flex-end;max-width:340px}
+  #ctrl button{font:inherit;font-size:13px;font-weight:700;color:var(--ink);background:#fff;border:2px solid #e9d3a8;border-radius:10px;padding:6px 9px;cursor:pointer}
   #ctrl button:hover,#ctrl button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
-  #mini{position:absolute;right:14px;bottom:14px;width:190px;height:190px;padding:4px}
-  #mini canvas{width:100%;height:100%;border-radius:12px;display:block}
-  #help{position:absolute;left:14px;bottom:14px;padding:8px 12px;font-size:13px;line-height:1.6;max-width:min(420px,calc(100vw - 240px))}
-  #toast{position:absolute;left:50%;top:18%;transform:translate(-50%,-10px);padding:14px 22px;text-align:center;opacity:0;transition:.4s;font-weight:700}
+  #mini{position:absolute;right:12px;bottom:12px;width:200px;padding:4px}
+  #mini canvas{width:100%;display:block;border-radius:12px}
+  #help{position:absolute;left:12px;bottom:12px;padding:8px 12px;font-size:12.5px;line-height:1.6;max-width:min(400px,calc(100vw - 240px))}
+  #arrowWrap{position:absolute;left:50%;top:12px;transform:translateX(-50%);padding:6px 16px;display:flex;align-items:center;gap:10px;font-size:14px;font-weight:700}
+  #arrow{display:inline-block;font-size:26px;color:#e8453c;line-height:1;transition:transform .08s linear}
+  #dlg{position:absolute;left:50%;bottom:26%;transform:translate(-50%,12px);width:min(560px,calc(100vw - 24px));padding:12px 16px;opacity:0;transition:.3s;pointer-events:auto}
+  #dlg.show{opacity:1;transform:translate(-50%,0)}
+  #dlg .who{font-weight:700;color:#c9731a;font-size:14px}
+  #dlg .en{font-size:18px;font-weight:700;margin-top:3px;line-height:1.35}
+  #dlg .ko{font-size:14px;margin-top:3px;opacity:.8}
+  #toast{position:absolute;left:50%;top:20%;transform:translate(-50%,-10px);padding:14px 22px;text-align:center;opacity:0;transition:.4s;font-weight:700;max-width:90vw}
   #toast.show{opacity:1;transform:translate(-50%,0)}
   #toast .sub{font-weight:400;font-size:14px;margin-top:4px}
-  #target{position:absolute;left:50%;top:14px;transform:translateX(-50%);padding:6px 14px;font-size:14px}
-  #intro{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(#bfe6f7cc,#fff2cfdd);z-index:5}
-  #intro .card{max-width:480px;padding:28px 30px;text-align:center}
-  #intro h1{margin:0 0 6px;font-size:28px}
-  #intro p{margin:6px 0;line-height:1.6}
+  #intro{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(#bfe6f7e6,#fff2cfee);z-index:5;padding:12px}
+  #intro .card{max-width:500px;padding:24px 26px;text-align:center}
+  #intro h1{margin:0 0 6px;font-size:26px}
+  #intro p{margin:6px 0;line-height:1.6;font-size:15px}
   #intro button{margin-top:14px;font:inherit;font-size:18px;font-weight:700;color:#fff;background:var(--accent);border:0;border-radius:14px;padding:12px 32px;cursor:pointer}
   #intro button:disabled{opacity:.5;cursor:wait}
-  .hide-hud #hud{display:none}
-  @media (max-width:640px){#help{display:none}#mini{width:130px;height:130px}}
+  /* touch controls */
+  #touch{position:fixed;inset:0;pointer-events:none;display:none}
+  .touch #touch{display:block}
+  #stick{position:absolute;left:22px;bottom:30px;width:130px;height:130px;border-radius:50%;background:rgba(255,248,232,.45);border:3px solid rgba(233,211,168,.9);pointer-events:auto;touch-action:none}
+  #knob{position:absolute;left:35px;top:35px;width:60px;height:60px;border-radius:50%;background:rgba(242,169,59,.9);box-shadow:0 2px 6px rgba(0,0,0,.25)}
+  .tb{position:absolute;width:62px;height:62px;border-radius:50%;background:rgba(255,248,232,.85);border:3px solid #e9d3a8;font:700 14px "Malgun Gothic",sans-serif;color:var(--ink);pointer-events:auto;touch-action:none;display:flex;align-items:center;justify-content:center}
+  .tb.down{background:var(--accent);color:#fff}
+  #tbJump{right:22px;bottom:150px}
+  #tbRun{right:96px;bottom:90px}
+  .hide-hud #hud,.hide-hud #touch{display:none}
+  .touch #help{display:none}
+  .touch #dlg{bottom:34%}
+  @media (max-width:640px){
+    #help,#stats{display:none}
+    #arrowWrap{left:10px;transform:none;top:10px;padding:4px 10px;font-size:12px;max-width:calc(100vw - 190px)}
+    #arrow{font-size:20px}
+    #mission{left:10px;top:54px;max-width:calc(100vw - 150px);font-size:12px;padding:8px 10px}
+    #ctrl{max-width:170px;top:10px;right:10px;padding:4px}
+    #ctrl button{padding:4px 7px;font-size:12px}
+    #mini{width:110px;top:142px;bottom:auto;right:10px}
+    #dlg{bottom:30%}
+  }
 </style>
 </head>
 <body>
 <canvas id="c"></canvas>
 <div id="hud">
   <div id="stats" class="panel"></div>
-  <div id="target" class="panel"></div>
+  <div id="mission" class="panel"></div>
+  <div id="arrowWrap" class="panel"><span id="arrow">➤</span><span id="target"></span></div>
   <div id="ctrl" class="panel">
-    <button id="bSwap" title="Tab">🦆↔🐹 교대</button>
-    <button data-t="0">☀ 낮</button><button data-t="1">🌇 노을</button><button data-t="2">🌙 밤</button>
+    <button id="bSwap" title="Tab">🦆↔🐹</button>
+    <button data-t="0">☀</button><button data-t="1">🌇</button><button data-t="2">🌙</button>
+    <button id="bGuide" title="자동 길안내">🧭</button>
+    <button id="bTilt" title="기울이기 조작">📱</button>
+    <button id="bFull" title="전체화면">⛶</button>
     <button id="bPhoto" title="P">📷</button>
+    <button id="bReset" title="미션 처음부터">↺</button>
   </div>
-  <div id="help" class="panel"><b>WASD/방향키</b> 이동 · <b>Shift</b> 달리기 · <b>Space</b> 점프(오리는 길게 눌러 활공)<br><b>마우스 드래그</b> 시점 · <b>휠</b> 줌 · <b>Tab</b> 오리/카피바라 교대 · <b>P</b> 사진 모드</div>
-  <div id="mini" class="panel"><canvas id="mm" width="380" height="380"></canvas></div>
+  <div id="help" class="panel"><b>WASD/방향키</b> 이동 · <b>Shift</b> 달리기 · <b>Space</b> 점프(오리는 길게 눌러 활공)<br><b>마우스 드래그</b> 시점 · <b>휠</b> 줌 · <b>Tab</b> 오리/카피바라 교대 · <b>P</b> 사진 · <b>클릭/Enter</b> 대화 넘기기<br><b>바닥 클릭·탭</b> 그곳으로 이동 · <b>🧭</b> 자동 길안내</div>
+  <div id="mini" class="panel"><canvas id="mm"></canvas></div>
+  <div id="dlg" class="panel"><div class="who"></div><div class="en"></div><div class="ko"></div></div>
   <div id="toast" class="panel"></div>
 </div>
+<div id="touch">
+  <div id="stick"><div id="knob"></div></div>
+  <div class="tb" id="tbJump">점프</div>
+  <div class="tb" id="tbRun">달리기</div>
+</div>
 <div id="intro"><div class="card panel">
-  <h1>🦆 헤이리 여행 🐹</h1>
-  <p>카피바라와 머리 위 오리 새끼가 파주 헤이리 예술마을을 천천히 산책해요.</p>
-  <p>마을 곳곳의 명소에서 <b>스탬프</b>를 모으고, 길가의 <b>유자</b>를 주워 보세요.<br>(지도는 OpenStreetMap 실제 도로 기반)</p>
+  <h1>🦆 파주영어마을 여행 🐹</h1>
+  <p>카피바라 머리 위에 올라탄 대장오리와 함께<br><b>파주영어마을</b>과 <b>헤이리 예술마을</b>을 돌아다니며 심부름을 해요.</p>
+  <p>미션 1 · 정문 ↔ 본관 심부름<br>미션 2 · 헤이리 마을에서 커피 사오기</p>
+  <p style="font-size:12px;opacity:.7">지도는 OpenStreetMap 실제 도로·부지 경계 기반</p>
   <button id="start" disabled>불러오는 중…</button>
 </div></div>
 
 <script src="map.js"></script>
-<script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js"}}</script>
-<script type="module">
-import * as THREE from 'three';
-
-const MAP = window.HEYRI_MAP, R = MAP.R;
-const $ = s => document.querySelector(s);
-let seed = 20261005;
-const rnd = () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
-const rr = (a, b) => a + rnd() * (b - a);
-
-/* ---------- renderer / scene ---------- */
-const renderer = new THREE.WebGLRenderer({ canvas: $('#c'), antialias: true });
-renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 1500);
-const hemi = new THREE.HemisphereLight(0xffffff, 0x88aa66, 1);
-scene.add(hemi);
-const sun = new THREE.DirectionalLight(0xfff4e0, 1.2);
-sun.castShadow = true;
-sun.shadow.mapSize.set(2048, 2048);
-Object.assign(sun.shadow.camera, { left: -45, right: 45, top: 45, bottom: -45, near: 1, far: 220 });
-sun.shadow.bias = -0.0005;
-scene.add(sun, sun.target);
-function resize() { renderer.setSize(innerWidth, innerHeight, false); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); }
-addEventListener('resize', resize); resize();
-
-const mats = {};
-const mat = (c, o = {}) => mats[c + JSON.stringify(o)] ??= new THREE.MeshLambertMaterial({ color: c, ...o });
-
-/* ---------- ground ---------- */
-const ground = new THREE.Mesh(new THREE.PlaneGeometry(6000, 6000), mat(0x8cc271));
-ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
-// mowed village area
-const lawn = new THREE.Mesh(new THREE.PlaneGeometry(R * 2, R * 2), mat(0x9bd07c));
-lawn.rotation.x = -Math.PI / 2; lawn.position.y = 0.005; lawn.receiveShadow = true; scene.add(lawn);
-
-/* ---------- roads ---------- */
-const ROAD = {
-  trunk: [12, 0x666a72, 5], trunk_link: [8, 0x666a72, 5], secondary: [9, 0x6b6f76, 4], secondary_link: [7, 0x6b6f76, 4],
-  tertiary: [8, 0x73777e, 3], tertiary_link: [6, 0x73777e, 3], residential: [6, 0x7c8087, 2], unclassified: [6, 0x7c8087, 2],
-  living_street: [5, 0x9a9588, 2], service: [4, 0xaaa392, 1], track: [3, 0xc9b48a, 1], pedestrian: [4, 0xe0d2b4, 1],
-  footway: [2, 0xe3d5b8, 1], path: [1.8, 0xd9c9a4, 1], cycleway: [2.2, 0xd8a9a0, 1], steps: [2, 0xcfc4ae, 1]
-};
-{
-  const pos = [], col = [], idx = [];
-  const c = new THREE.Color();
-  for (const r of MAP.roads) {
-    const [w, color, rank] = ROAD[r.k] || [4, 0xaaaaaa, 1];
-    const p = r.p, y = 0.02 + rank * 0.008; c.set(color);
-    const base = pos.length / 3;
-    for (let i = 0; i < p.length; i++) {
-      const a = p[Math.max(0, i - 1)], b = p[Math.min(p.length - 1, i + 1)];
-      let dx = b[0] - a[0], dz = b[1] - a[1]; const l = Math.hypot(dx, dz) || 1; dx /= l; dz /= l;
-      const nx = -dz * w / 2, nz = dx * w / 2;
-      pos.push(p[i][0] + nx, y, p[i][1] + nz, p[i][0] - nx, y, p[i][1] - nz);
-      col.push(c.r, c.g, c.b, c.r, c.g, c.b);
-    }
-    for (let i = 0; i < p.length - 1; i++) { const k = base + i * 2; idx.push(k, k + 1, k + 2, k + 1, k + 3, k + 2); }
-  }
-  const g = new THREE.BufferGeometry();
-  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
-  g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
-  g.setIndex(idx); g.computeVertexNormals();
-  const m = new THREE.Mesh(g, new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide }));
-  m.receiveShadow = true; scene.add(m);
-}
-// spatial hash of sampled road points
-const CELL = 10, roadHash = new Map();
-const key = (cx, cz) => cx * 4096 + cz;
-for (const r of MAP.roads) {
-  const hw = (ROAD[r.k] || [4])[0] / 2;
-  for (let i = 0; i < r.p.length - 1; i++) {
-    const [ax, az] = r.p[i], [bx, bz] = r.p[i + 1], L = Math.hypot(bx - ax, bz - az), n = Math.max(1, Math.ceil(L / 3));
-    for (let s = 0; s <= n; s++) {
-      const x = ax + (bx - ax) * s / n, z = az + (bz - az) * s / n, k = key(Math.floor(x / CELL), Math.floor(z / CELL));
-      (roadHash.get(k) || roadHash.set(k, []).get(k)).push([x, z, hw]);
-    }
-  }
-}
-function roadDist(x, z, maxd) { // distance to nearest road edge
-  let best = maxd; const cr = Math.ceil(maxd / CELL), cx = Math.floor(x / CELL), cz = Math.floor(z / CELL);
-  for (let i = -cr; i <= cr; i++) for (let j = -cr; j <= cr; j++) {
-    const a = roadHash.get(key(cx + i, cz + j)); if (!a) continue;
-    for (const q of a) { const d = Math.hypot(q[0] - x, q[1] - z) - q[2]; if (d < best) best = d; }
-  }
-  return best;
-}
-
-/* ---------- water ---------- */
-const polyIn = (x, z, poly) => { let o = false; for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) { const [xi, zi] = poly[i], [xj, zj] = poly[j]; if ((zi > z) !== (zj > z) && x < (xj - xi) * (z - zi) / (zj - zi) + xi) o = !o; } return o; };
-for (const w of MAP.water) {
-  if (w.length < 3) continue;
-  const sh = new THREE.Shape(w.map(q => new THREE.Vector2(q[0], -q[1])));
-  const m = new THREE.Mesh(new THREE.ShapeGeometry(sh), new THREE.MeshLambertMaterial({ color: 0x66b7e0, transparent: true, opacity: .85, side: THREE.DoubleSide }));
-  m.rotation.x = -Math.PI / 2; m.position.y = 0.04; scene.add(m);
-}
-const inWater = (x, z) => MAP.water.some(w => w.length > 2 && polyIn(x, z, w));
-
-/* ---------- colliders ---------- */
-const colHash = new Map();
-function addCol(x, z, r) { const k = key(Math.floor(x / 20), Math.floor(z / 20)); (colHash.get(k) || colHash.set(k, []).get(k)).push([x, z, r]); }
-function collide(p, pr) {
-  const cx = Math.floor(p.x / 20), cz = Math.floor(p.z / 20);
-  for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) {
-    const a = colHash.get(key(cx + i, cz + j)); if (!a) continue;
-    for (const c of a) {
-      const dx = p.x - c[0], dz = p.z - c[1], d = Math.hypot(dx, dz), m = c[2] + pr;
-      if (d < m && d > 1e-4) { p.x = c[0] + dx / d * m; p.z = c[1] + dz / d * m; }
-    }
-  }
-}
-
-function camBlocked(x, y, z) {
-  if (y > 13) return false;
-  const cx = Math.floor(x / 20), cz = Math.floor(z / 20);
-  for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) {
-    const a = colHash.get(key(cx + i, cz + j)); if (!a) continue;
-    for (const c of a) if (c[2] > 1 && Math.hypot(x - c[0], z - c[1]) < c[2] + .4) return true;
-  }
-  return false;
-}
-/* ---------- buildings ---------- */
-const PAL = [0xf4efe4, 0xe9d8b8, 0xd9a07a, 0xb8c9d6, 0xcfd9a8, 0xe8b6b0, 0xf2e2a0, 0xa9b4a0, 0xd8cfc4, 0xc7916b, 0x9fb7c9];
-const ROOF = [0x8a4b3a, 0x5f6b73, 0x7a5a45, 0x3f4a55, 0xa65a43];
-const boxG = new THREE.BoxGeometry(1, 1, 1); boxG.translate(0, .5, 0);
-const prismG = (() => { const s = new THREE.Shape([new THREE.Vector2(-.5, 0), new THREE.Vector2(.5, 0), new THREE.Vector2(0, 1)]); const g = new THREE.ExtrudeGeometry(s, { depth: 1, bevelEnabled: false }); g.translate(0, 0, -.5); return g; })();
-const bldgs = []; // centers for overlap check
-function addBox(x, z, w, d, h, rot, wall, roof, gable) {
-  const g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = rot;
-  const b = new THREE.Mesh(boxG, mat(wall)); b.scale.set(w, h, d); b.castShadow = b.receiveShadow = true; g.add(b);
-  if (gable) { const r = new THREE.Mesh(prismG, mat(roof)); r.scale.set(w + .6, Math.min(w, d) * .38, d + .6); r.position.y = h; r.castShadow = true; g.add(r); }
-  else { const r = new THREE.Mesh(boxG, mat(roof)); r.scale.set(w + .5, .5, d + .5); r.position.y = h; r.castShadow = true; g.add(r); }
-  const door = new THREE.Mesh(boxG, mat(0x6b4a33)); door.scale.set(Math.min(1.6, w * .25), 2.2, .3); door.position.set(0, 0, d / 2); g.add(door);
-  const win = mat(0x7fb4d6); for (const s of [-1, 1]) { const wm = new THREE.Mesh(boxG, win); wm.scale.set(Math.min(1.6, w * .22), 1.2, .25); wm.position.set(s * w * .3, Math.min(h * .5, 2.4), d / 2); g.add(wm); }
-  scene.add(g);
-  const rad = Math.hypot(w, d) / 2 * .8; bldgs.push([x, z, rad]);
-  // tile the footprint with small circles so corners are solid too
-  const C = 3.2, nx = Math.max(1, Math.ceil(w / C)), nz = Math.max(1, Math.ceil(d / C)), cw = w / nx, cd = d / nz, cr = Math.hypot(cw, cd) / 2 * .98;
-  for (let i = 0; i < nx; i++) for (let j = 0; j < nz; j++) {
-    const lx = -w / 2 + cw * (i + .5), lz = -d / 2 + cd * (j + .5);
-    addCol(x + lx * Math.cos(rot) + lz * Math.sin(rot), z - lx * Math.sin(rot) + lz * Math.cos(rot), cr);
-  }
-}
-// real OSM buildings
-for (const b of MAP.buildings) {
-  const pts = b.p.slice(0, -1); if (pts.length < 3) continue;
-  const sh = new THREE.Shape(pts.map(q => new THREE.Vector2(q[0], -q[1])));
-  const h = rr(5, 9);
-  const m = new THREE.Mesh(new THREE.ExtrudeGeometry(sh, { depth: h, bevelEnabled: false }), mat(PAL[Math.floor(rnd() * PAL.length)], { side: THREE.DoubleSide }));
-  m.rotation.x = -Math.PI / 2; m.castShadow = m.receiveShadow = true; scene.add(m);
-  const roof = new THREE.Mesh(new THREE.ShapeGeometry(sh), mat(ROOF[Math.floor(rnd() * ROOF.length)], { side: THREE.DoubleSide }));
-  roof.rotation.x = -Math.PI / 2; roof.position.y = h + .02; scene.add(roof);
-  const cx = pts.reduce((s, q) => s + q[0], 0) / pts.length, cz = pts.reduce((s, q) => s + q[1], 0) / pts.length;
-  const rad = Math.min(25, Math.max(...pts.map(q => Math.hypot(q[0] - cx, q[1] - cz))));
-  bldgs.push([cx, cz, rad]);
-  const xs = pts.map(q => q[0]), zs = pts.map(q => q[1]), C = 4;
-  for (let x = Math.min(...xs) + C / 2; x < Math.max(...xs); x += C) for (let z = Math.min(...zs) + C / 2; z < Math.max(...zs); z += C) if (polyIn(x, z, pts)) addCol(x, z, C * .74);
-}
-
-/* ---------- stamps (landmarks) ---------- */
-const STAMP_DEF = [
-  ['헤이리 공식 매표소', '헤이리 매표소', '여행의 시작! 오리가 입장권을 물고 왔어요.', -79.6],
-  ['한립완구박물관', '한립완구박물관', '장난감 친구들이 반갑게 맞아줘요.'],
-  ['플라잉카우', '플라잉카우', '날아다니는 소? 카피바라는 그냥 앉아서 구경해요.'],
-  ['고막원', '고막원', '조용한 쉼터. 카피바라가 하품을 해요.'],
-  ['한국근현대사박물관', '한국근현대사박물관', '오래된 시간들이 차곡차곡 쌓여 있어요.'],
-  ['카메라타', '카메라타', '음악이 흘러나오는 마을의 귀.'],
-  ['김정기 뮤지엄', '김정기 뮤지엄', '예술가의 숨결이 느껴지는 곳.'],
-  ['파주영어마을', '파주영어마을', 'Quack! 오리가 영어로 인사해요.'],
-  ['물고기자리', '물고기자리', '연못 옆에서 잠깐 쉬어가요.'],
-  ['크레타', '크레타', '마을 동쪽 끝까지 오다니, 대단한 여행가!']
-];
-const stamps = STAMP_DEF.map(([n, name, blurb, px]) => {
-  const q = MAP.pois.find(p => p.n.startsWith(n) && (px === undefined || Math.abs(p.p[0] - px) < 1));
-  return q ? { name, blurb, x: q.p[0], z: q.p[1], got: false } : null;
-}).filter(Boolean);
-try { const s = JSON.parse(localStorage.getItem('heyri-stamps') || '[]'); stamps.forEach(t => t.got = s.includes(t.name)); } catch (e) { }
-
-function label(text, color) {
-  const c = document.createElement('canvas'); c.width = 512; c.height = 128; const x = c.getContext('2d');
-  x.fillStyle = 'rgba(255,248,232,.95)'; x.strokeStyle = color; x.lineWidth = 8;
-  x.beginPath(); x.roundRect(6, 6, 500, 116, 40); x.fill(); x.stroke();
-  x.fillStyle = '#4a3320'; x.font = 'bold 54px "Malgun Gothic",sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(text, 256, 68, 460);
-  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), depthTest: false, transparent: true }));
-  s.scale.set(14, 3.5, 1); s.renderOrder = 10; return s;
-}
-for (const s of stamps) {
-  const g = new THREE.Group(); g.position.set(s.x, 0, s.z);
-  s.beam = new THREE.Mesh(new THREE.CylinderGeometry(1.4, 1.4, 40, 20, 1, true), new THREE.MeshBasicMaterial({ color: 0xffd35a, transparent: true, opacity: .35, depthWrite: false, side: THREE.DoubleSide }));
-  s.beam.position.y = 20; g.add(s.beam);
-  s.ring = new THREE.Mesh(new THREE.TorusGeometry(3.2, .25, 8, 32), new THREE.MeshBasicMaterial({ color: 0xffb62e }));
-  s.ring.rotation.x = Math.PI / 2; s.ring.position.y = .4; g.add(s.ring);
-  s.sprite = label(s.name, '#f2a93b'); s.sprite.position.y = 16; g.add(s.sprite);
-  scene.add(g); s.group = g; addCol(s.x, s.z, 0.01);
-}
-function paintStamp(s) { if (!s.got) return; s.beam.material.color.set(0x7fe08a); s.beam.material.opacity = .15; s.ring.material.color.set(0x59c46a); s.sprite.scale.set(10, 2.5, 1); }
-stamps.forEach(paintStamp);
-
-/* ---------- filler buildings (OSM coverage is sparse) ---------- */
-{
-  const kinds = new Set(['residential', 'unclassified', 'tertiary', 'living_street', 'secondary', 'service', 'pedestrian', 'track', 'footway']);
-  let n = 0;
-  for (const r of MAP.roads) {
-    if (!kinds.has(r.k)) continue;
-    for (let i = 0; i < r.p.length - 1 && n < 480; i++) {
-      const [ax, az] = r.p[i], [bx, bz] = r.p[i + 1], L = Math.hypot(bx - ax, bz - az); if (L < 1) continue;
-      const dx = (bx - ax) / L, dz = (bz - az) / L, rot = Math.atan2(-dz, dx) + Math.PI / 2 * 0; // local +x along road
-      for (let t = rr(4, 14); t < L; t += rr(16, 26)) {
-        for (const side of [-1, 1]) {
-          if (rnd() < .3) continue;
-          const w = rr(8, 16), d = rr(7, 13), h = rr(4, 10), off = (ROAD[r.k][0] / 2) + 3.5 + d / 2 + rr(0, 5);
-          const x = ax + dx * t - dz * off * side, z = az + dz * t + dx * off * side;
-          if (Math.abs(x) > R - 25 || Math.abs(z) > R - 25) continue;
-          if (roadDist(x, z, d) < d / 2 + 1.5) continue;
-          if (bldgs.some(b => Math.hypot(b[0] - x, b[1] - z) < b[2] + Math.hypot(w, d) / 2 * .8 + 1)) continue;
-          if (stamps.some(s => Math.hypot(s.x - x, s.z - z) < 14) || inWater(x, z)) continue;
-          // width axis along road direction; front (+z local) faces the road
-          const face = Math.atan2(dz, dx); // road direction angle in xz (x forward, z)
-          // local x -> (cos,-sin)(rot) ; choose rot so local x aligns with road direction
-          const rotY = -Math.atan2(dz, dx) + (side > 0 ? Math.PI : 0);
-          addBox(x, z, w, d, h, rotY, PAL[Math.floor(rnd() * PAL.length)], ROOF[Math.floor(rnd() * ROOF.length)], rnd() < .55);
-          n++;
-        }
-      }
-    }
-  }
-}
-
-/* ---------- trees, flowers ---------- */
-{
-  const N = 900, crown = new THREE.InstancedMesh(new THREE.ConeGeometry(1, 1, 7), new THREE.MeshLambertMaterial({ color: 0xffffff }), N);
-  const crown2 = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 8, 6), new THREE.MeshLambertMaterial({ color: 0xffffff }), N);
-  const trunk = new THREE.InstancedMesh(new THREE.CylinderGeometry(.18, .26, 1, 6), mat(0x7a5535), N);
-  const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), c = new THREE.Color();
-  let k = 0, ci = 0, si = 0;
-  for (let tries = 0; tries < 8000 && k < N; tries++) {
-    const x = rr(-R, R), z = rr(-R, R);
-    if (roadDist(x, z, 6) < 5 || bldgs.some(b => Math.hypot(b[0] - x, b[1] - z) < b[2] + 3) || inWater(x, z)) continue;
-    if (stamps.some(s => Math.hypot(s.x - x, s.z - z) < 8)) continue;
-    const h = rr(3.5, 7), pine = rnd() < .45;
-    m4.compose(new THREE.Vector3(x, h * .2, z), q, new THREE.Vector3(1, h * .4, 1)); trunk.setMatrixAt(k, m4);
-    if (pine) { m4.compose(new THREE.Vector3(x, h * .65, z), q, new THREE.Vector3(h * .28, h * .75, h * .28)); crown.setMatrixAt(ci, m4); c.setHSL(rr(.28, .36), .45, rr(.28, .38)); crown.setColorAt(ci++, c); }
-    else { m4.compose(new THREE.Vector3(x, h * .72, z), q, new THREE.Vector3(h * .3, h * .3, h * .3)); crown2.setMatrixAt(si, m4); c.setHSL(rr(.18, .32), .5, rr(.36, .5)); crown2.setColorAt(si++, c); }
-    addCol(x, z, .5); k++;
-  }
-  trunk.count = k; crown.count = ci; crown2.count = si;
-  for (const m of [trunk, crown, crown2]) { m.castShadow = true; m.instanceMatrix.needsUpdate = true; if (m.instanceColor) m.instanceColor.needsUpdate = true; scene.add(m); }
-}
-// fence-free flowers (cheap instanced dots)
-{
-  const N = 700, f = new THREE.InstancedMesh(new THREE.SphereGeometry(.18, 6, 4), new THREE.MeshLambertMaterial({ color: 0xffffff }), N);
-  const m4 = new THREE.Matrix4(), c = new THREE.Color(), cols = [0xff8fa8, 0xffe066, 0xffffff, 0xc7a6ff]; let k = 0;
-  for (let t = 0; t < 4000 && k < N; t++) {
-    const x = rr(-R, R), z = rr(-R, R); const d = roadDist(x, z, 8);
-    if (d < 1 || d > 7 || bldgs.some(b => Math.hypot(b[0] - x, b[1] - z) < b[2] + 1) || inWater(x, z)) continue;
-    m4.makeTranslation(x, .2, z); f.setMatrixAt(k, m4); c.set(cols[k % 4]); f.setColorAt(k++, c);
-  }
-  f.count = k; scene.add(f);
-}
-
-/* ---------- clouds ---------- */
-const clouds = [];
-for (let i = 0; i < 14; i++) {
-  const g = new THREE.Group(); const cm = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .9 });
-  for (let j = 0; j < 5; j++) { const s = new THREE.Mesh(new THREE.SphereGeometry(rr(10, 18), 8, 6), cm); s.position.set(j * 14 - 28, rr(-3, 3), rr(-6, 6)); s.scale.y = .6; g.add(s); }
-  g.position.set(rr(-900, 900), rr(120, 170), rr(-900, 900)); scene.add(g); clouds.push({ g, cm });
-}
-
-/* ---------- yuzu (collectibles) ---------- */
-const yuzus = [];
-{
-  const geo = new THREE.SphereGeometry(.4, 10, 8), m = new THREE.MeshLambertMaterial({ color: 0xffa726, emissive: 0x5a2c00 });
-  const leaf = new THREE.Mesh(new THREE.SphereGeometry(.14, 6, 4), mat(0x4e9a3a)); leaf.scale.set(1, .4, 1.6); leaf.position.set(0, .4, 0);
-  let tries = 0;
-  while (yuzus.length < 45 && tries++ < 3000) {
-    const x = rr(-R + 20, R - 20), z = rr(-R + 20, R - 20), d = roadDist(x, z, 6);
-    if (d > 4 || bldgs.some(b => Math.hypot(b[0] - x, b[1] - z) < b[2] + 2) || inWater(x, z)) continue;
-    const y = new THREE.Mesh(geo, m); y.add(leaf.clone()); y.position.set(x, 1.1, z); y.castShadow = true; scene.add(y); yuzus.push({ m: y, got: false });
-  }
-}
-
-/* ---------- characters ---------- */
-const S = (r, sx, sy, sz, color, x, y, z) => { const m = new THREE.Mesh(new THREE.SphereGeometry(r, 16, 12), mat(color)); m.scale.set(sx, sy, sz); m.position.set(x, y, z); m.castShadow = true; return m; };
-function makeCapy() {
-  const g = new THREE.Group(), BR = 0xb07a45, DK = 0x6b4426, LT = 0xd9b383;
-  g.add(S(.5, 1, .9, 1.45, BR, 0, .62, 0));          // body
-  g.add(S(.34, .95, .85, 1.3, BR, 0, .8, .66));         // head
-  g.add(S(.27, 1.05, .8, 1.15, LT, 0, .72, .98));         // muzzle
-  g.add(S(.075, 1.5, .9, 1, 0x2b1a10, 0, .79, 1.27)); // nose
-  for (const s of [-1, 1]) {
-    g.add(S(.045, 1, 1, 1, 0x1d130c, s * .2, .9, .98));         // eyes
-    g.add(S(.055, 1, 1.1, .7, DK, s * .22, 1.05, .45));              // ears
-    g.add(S(.17, 1, 1, 1, 0xc4915b, s * .27, .55, .3));           // cheek fluff
-  }
-  g.legs = [];
-  for (const [x, z] of [[-.28, .5], [.28, .5], [-.28, -.5], [.28, -.5]]) {
-    const l = new THREE.Group(); l.position.set(x, .38, z);
-    const m = new THREE.Mesh(new THREE.CylinderGeometry(.11, .1, .38, 8), mat(DK)); m.position.y = -.19; m.castShadow = true; l.add(m); g.add(l); g.legs.push(l);
-  }
-  g.add(S(.08, 1, 1, 1, DK, 0, .6, -.72)); // tail nub
-  g.slot = new THREE.Object3D(); g.slot.position.set(0, 1.1, .5); g.add(g.slot);
-  return g;
-}
-function makeDuck() {
-  const g = new THREE.Group(), Y = 0xffe14d, O = 0xff9d2e;
-  g.add(S(.22, 1, .9, 1.25, Y, 0, .24, 0));
-  g.add(S(.15, 1, 1, 1, Y, 0, .46, .15));
-  const beak = new THREE.Mesh(new THREE.ConeGeometry(.06, .14, 8), mat(O)); beak.rotation.x = Math.PI / 2; beak.scale.set(1.5, 1, .7); beak.position.set(0, .44, .31); g.add(beak);
-  g.wings = [];
-  for (const s of [-1, 1]) {
-    g.add(S(.025, 1, 1, 1, 0x1d130c, s * .075, .5, .27));
-    const w = new THREE.Group(); w.position.set(s * .2, .3, 0); const wm = S(.12, .35, .8, 1.2, 0xffc933, s * .03, 0, 0); w.add(wm); g.add(w); g.wings.push(w);
-    const f = S(.07, 1.3, .3, 1.6, O, s * .09, .03, .06); g.add(f);
-  }
-  g.add(S(.05, 1, 1, 1, Y, 0, .3, -.28)); // tail
-  return g;
-}
-const capy = makeCapy(), duck = makeDuck();
-capy.position.set(-70, 0, 60); scene.add(capy); capy.slot.add(duck);
-duck.scale.setScalar(1);
-
-/* ---------- player state ---------- */
-const P = { mode: 'capy', vy: 0, speed: 0, yaw: Math.PI, walk: 0 };
-const camS = { yaw: 0, pitch: .4, dist: 9 };
-const keys = {};
-const ctl = () => P.mode === 'capy' ? capy : duck;
-function swap() {
-  if (P.mode === 'capy') {
-    P.mode = 'duck'; scene.attach(duck); duck.scale.setScalar(1.8); duck.position.y = Math.max(duck.position.y, 1.6); P.vy = 5; P.yaw = capy.rotation.y; duck.rotation.y = P.yaw;
-  } else {
-    P.mode = 'capy'; capy.slot.add(duck); duck.position.set(0, 0, 0); duck.rotation.set(0, 0, 0); duck.scale.setScalar(1); P.vy = 0; P.yaw = capy.rotation.y;
-  }
-  $('#bSwap').classList.toggle('on', P.mode === 'duck'); updateStats();
-}
-$('#bSwap').onclick = swap;
-addEventListener('keydown', e => {
-  if (e.repeat && e.code !== 'Space') return;
-  keys[e.code] = true;
-  if (e.code === 'Tab') { e.preventDefault(); swap(); }
-  if (e.code === 'KeyP') $('#bPhoto').click();
-  if (e.code === 'Space') e.preventDefault();
-});
-addEventListener('keyup', e => keys[e.code] = false);
-$('#bPhoto').onclick = () => document.body.classList.toggle('hide-hud');
-let drag = false;
-renderer.domElement.addEventListener('pointerdown', e => { drag = true; renderer.domElement.setPointerCapture(e.pointerId); });
-renderer.domElement.addEventListener('pointerup', () => drag = false);
-renderer.domElement.addEventListener('pointermove', e => { if (!drag) return; camS.yaw -= e.movementX * .006; camS.pitch = Math.min(1.2, Math.max(.08, camS.pitch + e.movementY * .005)); });
-addEventListener('wheel', e => { camS.dist = Math.min(24, Math.max(4, camS.dist + e.deltaY * .01)); }, { passive: true });
-
-/* ---------- time of day ---------- */
-const TOD = [
-  { sky: 0x9fd8f5, hemiS: 0xffffff, hemiG: 0x88aa66, hi: 1.0, sunC: 0xfff4e0, si: 1.2, dir: [.5, 1, .35], fog: 380 },
-  { sky: 0xf4b183, hemiS: 0xffd7b0, hemiG: 0x806040, hi: .75, sunC: 0xff9a55, si: 1.0, dir: [1, .35, .3], fog: 320 },
-  { sky: 0x24305e, hemiS: 0x6270b8, hemiG: 0x3a4666, hi: 1.1, sunC: 0x9fb0ff, si: .6, dir: [-.4, 1, -.3], fog: 240 }
-];
-let tod = 0;
-function setTime(i) {
-  tod = i; const t = TOD[i];
-  scene.background = new THREE.Color(t.sky); scene.fog = new THREE.Fog(t.sky, 40, t.fog);
-  hemi.color.set(t.hemiS); hemi.groundColor.set(t.hemiG); hemi.intensity = t.hi; sun.color.set(t.sunC); sun.intensity = t.si;
-  clouds.forEach(c => c.cm.color.set(i === 2 ? 0x4a5580 : i === 1 ? 0xffd9c0 : 0xffffff));
-  document.querySelectorAll('#ctrl [data-t]').forEach(b => b.classList.toggle('on', +b.dataset.t === i));
-}
-document.querySelectorAll('#ctrl [data-t]').forEach(b => b.onclick = () => setTime(+b.dataset.t));
-setTime(0);
-
-/* ---------- audio (tiny chimes) ---------- */
-let actx;
-function chime(freqs, dur = .18) {
-  try {
-    actx ??= new AudioContext();
-    freqs.forEach((f, i) => {
-      const o = actx.createOscillator(), g = actx.createGain(), t = actx.currentTime + i * dur * .7;
-      o.type = 'sine'; o.frequency.value = f; g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.18, t + .02); g.gain.exponentialRampToValueAtTime(.0001, t + dur * 2);
-      o.connect(g).connect(actx.destination); o.start(t); o.stop(t + dur * 2);
-    });
-  } catch (e) { }
-}
-
-/* ---------- HUD ---------- */
-let yuzuCount = 0;
-try { yuzuCount = +localStorage.getItem('heyri-yuzu') || 0; } catch (e) { }
-function updateStats() {
-  const got = stamps.filter(s => s.got).length;
-  $('#stats').innerHTML = `🏷 스탬프 ${got} / ${stamps.length}<br>🍊 유자 ${yuzuCount}<br><small>지금 조종: ${P.mode === 'capy' ? '🐹 카피바라 (오리는 머리 위!)' : '🦆 오리 (카피바라가 따라와요)'}</small>`;
-}
-let toastT;
-function toast(title, sub) {
-  const t = $('#toast'); t.innerHTML = `${title}<div class="sub">${sub || ''}</div>`; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 3200);
-}
-function save() { try { localStorage.setItem('heyri-stamps', JSON.stringify(stamps.filter(s => s.got).map(s => s.name))); localStorage.setItem('heyri-yuzu', yuzuCount); } catch (e) { } }
-updateStats();
-
-// minimap
-const mm = $('#mm'), mx = mm.getContext('2d'), MS = mm.width / (R * 2);
-const mmBase = document.createElement('canvas'); mmBase.width = mmBase.height = mm.width;
-{
-  const c = mmBase.getContext('2d'); c.fillStyle = '#b9dd9b'; c.fillRect(0, 0, mm.width, mm.width);
-  c.fillStyle = '#7dc0e6'; for (const w of MAP.water) { c.beginPath(); w.forEach((q, i) => c[i ? 'lineTo' : 'moveTo']((q[0] + R) * MS, (q[1] + R) * MS)); c.fill(); }
-  c.lineCap = 'round'; c.lineJoin = 'round';
-  for (const r of MAP.roads) { const [w, col] = ROAD[r.k] || [3, 0xaaaaaa]; c.strokeStyle = '#' + col.toString(16).padStart(6, '0'); c.lineWidth = Math.max(1.5, w * MS * 1.1); c.beginPath(); r.p.forEach((q, i) => c[i ? 'lineTo' : 'moveTo']((q[0] + R) * MS, (q[1] + R) * MS)); c.stroke(); }
-  c.fillStyle = '#c9a77a'; for (const b of bldgs) { c.fillRect((b[0] + R) * MS - 2, (b[1] + R) * MS - 2, 4, 4); }
-}
-function drawMini() {
-  mx.drawImage(mmBase, 0, 0);
-  for (const s of stamps) { mx.fillStyle = s.got ? '#59c46a' : '#ffb62e'; mx.strokeStyle = '#fff'; mx.lineWidth = 2; mx.beginPath(); mx.arc((s.x + R) * MS, (s.z + R) * MS, 7, 0, 7); mx.fill(); mx.stroke(); }
-  const o = ctl(); mx.save(); mx.translate((o.position.x + R) * MS, (o.position.z + R) * MS); mx.rotate(-P.yaw + Math.PI);
-  mx.fillStyle = '#e8453c'; mx.strokeStyle = '#fff'; mx.lineWidth = 2.5; mx.beginPath(); mx.moveTo(0, -11); mx.lineTo(8, 9); mx.lineTo(0, 5); mx.lineTo(-8, 9); mx.closePath(); mx.fill(); mx.stroke(); mx.restore();
-}
-
-/* ---------- main loop ---------- */
-const clock = new THREE.Clock(); let started = false, time = 0, nearest = null;
-const tmpV = new THREE.Vector3();
-function angLerp(a, b, t) { let d = ((b - a + Math.PI) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2) - Math.PI; return a + d * t; }
-function step(dt) {
-  time += dt;
-  const o = ctl(), isDuck = P.mode === 'duck';
-  let ix = (keys.KeyD || keys.ArrowRight ? 1 : 0) - (keys.KeyA || keys.ArrowLeft ? 1 : 0);
-  let iy = (keys.KeyW || keys.ArrowUp ? 1 : 0) - (keys.KeyS || keys.ArrowDown ? 1 : 0);
-  const sy = Math.sin(camS.yaw), cy = Math.cos(camS.yaw);
-  let mxv = -sy * iy + cy * ix, mzv = -cy * iy - sy * ix; const ml = Math.hypot(mxv, mzv);
-  const run = keys.ShiftLeft || keys.ShiftRight;
-  const target = ml > 0 ? (isDuck ? (run ? 13 : 7) : (run ? 11 : 5.5)) : 0;
-  P.speed += (target - P.speed) * Math.min(1, dt * 8);
-  if (ml > 0) { mxv /= ml; mzv /= ml; P.yaw = angLerp(P.yaw, Math.atan2(mxv, mzv), Math.min(1, dt * 10)); P.dir = [mxv, mzv]; }
-  const d = P.dir || [0, 0];
-  if (P.speed > .05) { o.position.x += d[0] * P.speed * dt; o.position.z += d[1] * P.speed * dt; }
-  o.position.x = Math.max(-R + 5, Math.min(R - 5, o.position.x)); o.position.z = Math.max(-R + 5, Math.min(R - 5, o.position.z));
-  collide(o.position, isDuck ? .45 : .6);
-  // vertical
-  const grounded = o.position.y <= (isDuck ? 0.001 : 0.001);
-  const g = isDuck && keys.Space && P.vy < 0 ? 5 : 22;
-  if (keys.Space && grounded) { P.vy = isDuck ? 8 : 6.5; chime([isDuck ? 880 : 440], .08); }
-  P.vy -= g * dt; o.position.y += P.vy * dt;
-  if (o.position.y < 0) { o.position.y = 0; P.vy = 0; }
-  o.rotation.y = P.yaw;
-  P.walk += P.speed * dt * 1.6;
-  // animate
-  const air = o.position.y > .05;
-  if (!isDuck) {
-    capy.position.y = Math.max(capy.position.y, 0);
-    const sw = Math.sin(P.walk * 2.2) * Math.min(1, P.speed / 5) * .7;
-    capy.legs.forEach((l, i) => l.rotation.x = (i === 0 || i === 3 ? sw : -sw));
-    capy.children[0].position.y = .62 + Math.abs(Math.sin(P.walk * 2.2)) * .04 * Math.min(1, P.speed / 5);
-    capy.rotation.z = Math.sin(P.walk * 2.2) * .03 * Math.min(1, P.speed / 5);
-    duck.position.y = Math.abs(Math.sin(P.walk * 2.2 + .6)) * .05 * Math.min(1, P.speed / 5) + (Math.sin(time * 2) * .01);
-    duck.rotation.z = Math.sin(time * 1.3) * .08; duck.rotation.y = Math.sin(time * .6) * .5 * (P.speed < .5 ? 1 : .1);
-    duck.wings.forEach((w, i) => w.rotation.z = (i ? -1 : 1) * (air ? Math.sin(time * 30) * .8 : Math.sin(time * 3) * .05));
-  } else {
-    duck.rotation.z = Math.sin(P.walk * 2.2) * .12 * Math.min(1, P.speed / 5);
-    duck.wings.forEach((w, i) => w.rotation.z = (i ? -1 : 1) * (air ? Math.sin(time * 34) * .9 : Math.sin(time * 3) * .05));
-    // capybara follows
-    const dx = duck.position.x - capy.position.x, dz = duck.position.z - capy.position.z, dd = Math.hypot(dx, dz);
-    let cs = 0;
-    if (dd > 3.5) { cs = Math.min(8, (dd - 3.5) * 2.5 + 1); capy.position.x += dx / dd * cs * dt; capy.position.z += dz / dd * cs * dt; capy.rotation.y = angLerp(capy.rotation.y, Math.atan2(dx, dz), Math.min(1, dt * 6)); collide(capy.position, .6); }
-    const sw = Math.sin(time * 9) * Math.min(1, cs / 3) * .7;
-    capy.legs.forEach((l, i) => l.rotation.x = (i === 0 || i === 3 ? sw : -sw));
-    capy.rotation.z = 0; capy.children[0].position.y = .62;
-  }
-  // camera
-  tmpV.set(o.position.x, o.position.y * .5 + (isDuck ? .9 : 1.3), o.position.z);
-  const dist = camS.dist * (isDuck ? .7 : 1), cp = Math.cos(camS.pitch);
-  const cdx = Math.sin(camS.yaw) * cp * dist, cdy = Math.sin(camS.pitch) * dist, cdz = Math.cos(camS.yaw) * cp * dist;
-  let k = 1;
-  for (; k > .15; k -= .05) if (!camBlocked(tmpV.x + cdx * k, tmpV.y + cdy * k, tmpV.z + cdz * k)) break;
-  camera.position.set(tmpV.x + cdx * k, tmpV.y + cdy * k, tmpV.z + cdz * k);
-  camera.position.y = Math.max(camera.position.y, .6); camera.lookAt(tmpV);
-  // sun follows
-  const dir = TOD[tod].dir; sun.position.set(o.position.x + dir[0] * 80, dir[1] * 80, o.position.z + dir[2] * 80); sun.target.position.copy(o.position);
-  // stamps & yuzu
-  let best = null, bd = 1e9;
-  for (const s of stamps) {
-    s.beam.material.opacity = (s.got ? .12 : .3 + Math.sin(time * 3) * .1); s.ring.rotation.z = time; s.ring.position.y = .4 + Math.sin(time * 2) * .15;
-    s.sprite.visible = true;
-    const dd = Math.hypot(s.x - o.position.x, s.z - o.position.z);
-    if (!s.got && dd < bd) { bd = dd; best = s; }
-    if (!s.got && dd < 7) { s.got = true; paintStamp(s); save(); updateStats(); chime([660, 830, 990, 1320]); const n = stamps.filter(q => q.got).length; toast(`🏷 ${s.name} 스탬프!`, n === stamps.length ? '🎉 모든 명소를 다녀왔어요! 여행 완료!' : s.blurb); }
-  }
-  nearest = best;
-  $('#target').textContent = best ? `다음 명소: ${best.name} · ${Math.round(bd)}m` : '🎉 모든 스탬프 수집 완료! 자유롭게 산책하세요';
-  for (const y of yuzus) {
-    if (y.got) continue; y.m.rotation.y = time * 2; y.m.position.y = 1.1 + Math.sin(time * 2 + y.m.position.x) * .15;
-    if (Math.hypot(y.m.position.x - o.position.x, y.m.position.z - o.position.z) < 1.8 && o.position.y < 2.5) { y.got = true; y.m.visible = false; yuzuCount++; save(); updateStats(); chime([1040, 1560], .1); }
-  }
-  clouds.forEach((c, i) => { c.g.position.x += dt * (1.5 + i % 3 * .5); if (c.g.position.x > 1000) c.g.position.x = -1000; });
-}
-function loop() {
-  requestAnimationFrame(loop);
-  const dt = Math.min(.05, clock.getDelta());
-  if (started) step(dt);
-  renderer.render(scene, camera);
-  if (started) drawMini();
-}
-// initial camera framing behind the capybara
-camS.yaw = 0; step(0.001); loop();
-
-const btn = $('#start'); btn.disabled = false; btn.textContent = '여행 시작!';
-btn.onclick = () => { $('#intro').style.display = 'none'; started = true; chime([523, 659, 784]); toast('🐹🦆 출발!', '표지판 대신 반짝이는 노란 빛기둥을 따라가 보세요'); };
-window.__game = { camS, setTime, swap, P, capy, duck, stamps, bldgs, scene };
-</script>
+<script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"}}</script>
+<script type="module" src="game.js"></script>
 </body>
 </html>
