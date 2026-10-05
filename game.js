@@ -510,7 +510,7 @@ const polyWall = TEX.sand.map.clone(); polyWall.repeat.set(1 / 4, 1 / 3.2); poly
 
 /* ----- ground: brick pavement, gardens ----- */
 const loadImg = src => new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = src; });
-const [roadImg, gardenImg] = await Promise.all([loadImg('road_mask.png'), loadImg('plaza_mask.png')]);
+const [roadImg, gardenImg] = await Promise.all([loadImg('road_mask.png?v=3'), loadImg('plaza_mask.png?v=3')]);
 const TX = CP.tex;
 const gardenData = (() => { const c = document.createElement('canvas'); c.width = TX.W; c.height = TX.H; const q = c.getContext('2d'); q.drawImage(gardenImg, 0, 0); return q.getImageData(0, 0, TX.W, TX.H).data; })();
 const roadData = (() => { const c = document.createElement('canvas'); c.width = TX.W; c.height = TX.H; const q = c.getContext('2d'); q.drawImage(roadImg, 0, 0); return q.getImageData(0, 0, TX.W, TX.H).data; })();
